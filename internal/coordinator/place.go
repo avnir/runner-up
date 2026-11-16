@@ -214,6 +214,9 @@ func RunArgs(cfg *config.Config, p config.Place, pool string) []string {
 	}
 	if p.DockerInDocker {
 		args = append(args, "--docker-in-docker")
+		for _, dns := range p.DockerDNS {
+			args = append(args, "--docker-dns", dns)
+		}
 	}
 	if p.DiskGB > 0 {
 		args = append(args, "--disk-gb", strconv.Itoa(p.DiskGB))

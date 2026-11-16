@@ -45,6 +45,9 @@ func (p dockerProvider) run(ctx context.Context, a *AgentRun, jit string, out io
 		args := []string{"run", "-d", "--rm", "--privileged", "--name", daemonName(a.Place), "--network", containerName(a.Place),
 			"--network-alias", "docker", "--cpus", strconv.Itoa(a.Cores - 1), "--memory", strconv.Itoa(a.MemoryMB-1024) + "m",
 			"-e", "DOCKER_TLS_CERTDIR=", "docker:28-dind"}
+		for _, dns := range a.DockerDNS {
+			args = append(args[:len(args)-1], "--dns", dns, args[len(args)-1])
+		}
 		if output, err := exec.CommandContext(ctx, "docker", args...).CombinedOutput(); err != nil {
 			return fmt.Errorf("docker daemon start: %s", FirstLine(string(output), err))
 		}
@@ -100,6 +103,9 @@ func dockerArgs(a *AgentRun, l runnerLaunch, hook string) []string {
 		"--cpus", strconv.Itoa(cores), "--memory", strconv.Itoa(memory) + "m"}
 	if a.DockerInDocker {
 		args = append(args, "--network", containerName(a.Place), "-e", "DOCKER_HOST=tcp://docker:2375")
+		for _, dns := range a.DockerDNS {
+			args = append(args, "--dns", dns)
+		}
 	}
 	if l.Hook != "" {
 		args = append(args, "-v", a.Self+":"+dockerGuest+"/runner-up:ro", "-v", hook+":"+l.Hook+":ro")

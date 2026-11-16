@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/fs"
 	"maps"
+	"net"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -199,7 +200,8 @@ type Place struct {
 	// VM's name, or the image an Apple container place's guests start from.
 	Image string `json:"image,omitempty"`
 	// DockerInDocker gives a Docker place a private daemon for each job.
-	DockerInDocker bool `json:"dockerInDocker,omitempty"`
+	DockerInDocker bool     `json:"dockerInDocker,omitempty"`
+	DockerDNS      []string `json:"dockerDNS,omitempty"`
 	// PoolImages gives some of the place's pools their own image, by pool
 	// label: a job of a named pool runs on that image, any other job on
 	// Image. The place stays one place; its job's pool chooses both the
@@ -526,6 +528,14 @@ func (c *Config) Validate() error {
 			}
 			if p.DockerInDocker && p.Provider != ProviderDocker {
 				return fmt.Errorf("place %q: only a Docker place enables dockerInDocker", p.ID)
+			}
+			if len(p.DockerDNS) > 0 && !p.DockerInDocker {
+				return fmt.Errorf("place %q: dockerDNS needs dockerInDocker", p.ID)
+			}
+			for _, dns := range p.DockerDNS {
+				if net.ParseIP(dns) == nil {
+					return fmt.Errorf("place %q: dockerDNS value %q is not an IP address", p.ID, dns)
+				}
 			}
 			for _, l := range slices.Sorted(maps.Keys(p.PoolImages)) {
 				image := p.PoolImages[l]
