@@ -212,6 +212,9 @@ func RunArgs(cfg *config.Config, p config.Place, pool string) []string {
 	if image := p.ImageFor(pool); image != "" {
 		args = append(args, "--image", image)
 	}
+	if p.DockerInDocker {
+		args = append(args, "--docker-in-docker")
+	}
 	if p.DiskGB > 0 {
 		args = append(args, "--disk-gb", strconv.Itoa(p.DiskGB))
 	}

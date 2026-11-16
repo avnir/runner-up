@@ -54,12 +54,13 @@ type provider interface {
 }
 
 type AgentRun struct {
-	Provider string
-	Place    string
-	Cores    int
-	MemoryMB int
-	DiskGB   int
-	Image    string
+	Provider       string
+	Place          string
+	Cores          int
+	MemoryMB       int
+	DiskGB         int
+	Image          string
+	DockerInDocker bool
 	// Switch is the Hyper-V switch a Hyper-V place joins.
 	Switch string
 	// Guest is the system a Hyper-V place's image runs: config.GuestLinux
@@ -174,6 +175,7 @@ func AgentMain(args []string) int {
 	fs.IntVar(&a.MemoryMB, "memory", 4096, "memory the place gets, in MB")
 	fs.IntVar(&a.DiskGB, "disk-gb", 0, "a KVM place's disk size, 40 GB by default, or the size a tart clone or Hyper-V disk grows to")
 	fs.StringVar(&a.Image, "image", "", "the runner image, a KVM or Hyper-V place's base disk image, the tart image a tart place clones, or the image an Apple container place starts from")
+	fs.BoolVar(&a.DockerInDocker, "docker-in-docker", false, "give a Docker place a private Docker daemon")
 	fs.StringVar(&a.Switch, "switch", config.DefaultSwitch, "the Hyper-V switch a Hyper-V place joins")
 	fs.StringVar(&a.Guest, "guest", config.GuestLinux, "the system a Hyper-V place's image runs: linux or windows")
 	fs.StringVar(&a.ToolCache, "tool-cache", "", "the runner's tool cache: a host place's, kept between jobs (in the place's folder by default), or a folder inside a tart clone")

@@ -599,6 +599,7 @@ Each place may also set:
 | `workFolder` | `_work` | where the runner keeps its jobs' work, relative to the runner's folder or absolute; GitHub's Ubuntu runners use `/home/runner/work` |
 | `toolCache` | see meaning | the runner's tool cache (`RUNNER_TOOL_CACHE`). A host place keeps it between jobs, in its folder under the agent's by default, so a tool such as `setup-node`'s Node is downloaded once. For a tart place, a folder inside the clone that the image was set up with; by default the runner's own, which every job starts without |
 | `poolImages` | none | another image for some of the place's pools, by pool label. A job of a named pool runs on that image, any other job on `image` |
+| `dockerInDocker` | `false` | give each job on a Docker place its own Docker daemon (see [Docker builds in Docker places](docs/docker.md)) |
 | `priority` | its machine's | the place's [priority level](#priority-levels) |
 | `guest` | `linux` | the system a Hyper-V place's disks run: `linux`, or `windows` for a Windows disk (see [What you need](#what-you-need)) |
 

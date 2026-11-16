@@ -198,6 +198,8 @@ type Place struct {
 	// clones, such as ghcr.io/cirruslabs/macos-sequoia-base:latest or a local
 	// VM's name, or the image an Apple container place's guests start from.
 	Image string `json:"image,omitempty"`
+	// DockerInDocker gives a Docker place a private daemon for each job.
+	DockerInDocker bool `json:"dockerInDocker,omitempty"`
 	// PoolImages gives some of the place's pools their own image, by pool
 	// label: a job of a named pool runs on that image, any other job on
 	// Image. The place stays one place; its job's pool chooses both the
@@ -509,6 +511,9 @@ func (c *Config) Validate() error {
 			}
 			for _, label := range p.Pools {
 				sized := c.SizePlace(p, label)
+				if p.DockerInDocker && (sized.Cores < 2 || sized.MemoryMB < 2048) {
+					return fmt.Errorf("place %q, pool %q: dockerInDocker needs at least 2 cores and 2048 MB", p.ID, label)
+				}
 				if b.Cores > 0 && sized.Cores > b.Cores {
 					return fmt.Errorf("place %q, pool %q: its %d cores never fit its machine's %d, less the owner's room", p.ID, label, sized.Cores, b.Cores)
 				}
@@ -518,6 +523,9 @@ func (c *Config) Validate() error {
 			}
 			if err := checkImage(p.Provider, p.Image); err != nil {
 				return fmt.Errorf("place %q: %w", p.ID, err)
+			}
+			if p.DockerInDocker && p.Provider != ProviderDocker {
+				return fmt.Errorf("place %q: only a Docker place enables dockerInDocker", p.ID)
 			}
 			for _, l := range slices.Sorted(maps.Keys(p.PoolImages)) {
 				image := p.PoolImages[l]
