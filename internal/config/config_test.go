@@ -85,6 +85,29 @@ func TestPoolSizesThatCouldNeverRunAreRefused(t *testing.T) {
 
 func share(p Place) Share { return Share{Cores: p.Cores, MemoryMB: p.MemoryMB} }
 
+// Intent (README, Docker builds in Docker places): only Docker places with
+// enough room for both the runner and daemon can enable the private daemon.
+func TestDockerInDockerNeedsRoomAndDockerProvider(t *testing.T) {
+	for _, tc := range []struct {
+		provider      string
+		cores, memory int
+		want          string
+	}{
+		{ProviderDocker, 2, 2048, ""},
+		{ProviderDocker, 1, 2048, "needs at least 2 cores"},
+		{ProviderDocker, 2, 1024, "needs at least 2 cores"},
+		{ProviderHost, 2, 2048, "only a Docker place"},
+	} {
+		cfg := initialSetup(t)
+		cfg.Machines = []Machine{{Name: "example", Places: []Place{{ID: "build-1", Provider: tc.provider,
+			Pools: []string{"ru-linux"}, Cores: tc.cores, MemoryMB: tc.memory, DockerInDocker: true}}}}
+		err := cfg.Validate()
+		if tc.want == "" && err != nil || tc.want != "" && (err == nil || !strings.Contains(err.Error(), tc.want)) {
+			t.Errorf("%s %d cores %d MB: %v, want %q", tc.provider, tc.cores, tc.memory, err, tc.want)
+		}
+	}
+}
+
 // Intent (README, "Setup file", poolImages): a pool image no job could run on
 // is refused when the setup loads, not when a job reaches it.
 func TestPoolImagesNoJobCouldRunOnAreRefused(t *testing.T) {
