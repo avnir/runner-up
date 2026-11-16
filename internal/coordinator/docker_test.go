@@ -19,4 +19,9 @@ func TestDockerInDockerRunArgs(t *testing.T) {
 	if !slices.Contains(RunArgs(cfg, p, "linux-build"), "--docker-in-docker") {
 		t.Fatal("the opted-in Docker place did not enable Docker in Docker")
 	}
+	p.DockerDNS = []string{"192.0.2.53"}
+	args := RunArgs(cfg, p, "linux-build")
+	if !slices.Contains(args, "--docker-dns") || !slices.Contains(args, "192.0.2.53") {
+		t.Fatal("the configured Docker DNS did not reach the agent")
+	}
 }

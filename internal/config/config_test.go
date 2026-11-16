@@ -34,6 +34,27 @@ func TestPoolLabelsOtherRunnersAnswerToAreRefused(t *testing.T) {
 	}
 }
 
+func TestDockerDNSRequiresDockerInDockerAndAnIPAddress(t *testing.T) {
+	for _, tc := range []struct {
+		dind bool
+		dns  string
+	}{
+		{false, "192.0.2.53"},
+		{true, "not-an-ip"},
+	} {
+		cfg := initialSetup(t)
+		cfg.Machines = []Machine{{Name: "linux", Places: []Place{{ID: "docker", Provider: ProviderDocker, Pools: []string{"ru-linux"}, Cores: 2, MemoryMB: 2048, DockerInDocker: tc.dind, DockerDNS: []string{tc.dns}}}}}
+		if err := cfg.Validate(); err == nil {
+			t.Fatalf("accepted invalid dockerDNS configuration: %+v", tc)
+		}
+	}
+	cfg := initialSetup(t)
+	cfg.Machines = []Machine{{Name: "linux", Places: []Place{{ID: "docker", Provider: ProviderDocker, Pools: []string{"ru-linux"}, Cores: 2, MemoryMB: 2048, DockerInDocker: true, DockerDNS: []string{"192.0.2.53", "2001:db8::53"}}}}}
+	if err := cfg.Validate(); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // Intent (README, "Setup file": each machine's roomCores and roomMemoryMB
 // keep room for its owner): a machine whose owner keeps every core leaves
 // its places nothing, so it is refused.

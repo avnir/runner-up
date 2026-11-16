@@ -8,6 +8,10 @@ Set `dockerInDocker` on a Docker place to let its jobs use `docker build`,
  "cores": 4, "memoryMB": 8192, "dockerInDocker": true}
 ```
 
+If the host resolves through a loopback stub such as systemd-resolved, set
+`dockerDNS` to the host's reachable DNS server addresses (for example
+`["192.0.2.53"]`). Each address is given to both the sidecar and runner.
+
 The default runner image includes the Docker CLI and buildx. runner-up starts
 `docker:28-dind` as a privileged sidecar on a new network for each job, waits
 for its daemon, and gives the runner `DOCKER_HOST=tcp://docker:2375`. No host
